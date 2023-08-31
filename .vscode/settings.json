@@ -1,0 +1,7 @@
+{
+    "editor.fontFamily": "'Cascadia Code',  Consolas, 'Courier New', monospace",
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.python"
+    },
+    "python.formatting.provider": "none"
+}
