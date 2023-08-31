@@ -55,7 +55,7 @@ def read_item(item_id: int, q: Union[str, None] = None):
     return {"item_id": item_id, "q": q}
 
 @app.post("/")
-def upload_file(file: UploadFile = File(...), id: str = Body(...), name: str = Body(...)):
+async def upload_file(file: UploadFile = File(...), id: str = Body(...), name: str = Body(...)):
     
     bpy.ops.object.select_all(action='SELECT')
     bpy.ops.object.delete()

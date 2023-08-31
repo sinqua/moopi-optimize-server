@@ -1,0 +1,4 @@
+*.log
+*.glb
+*.out
+*.pyc
