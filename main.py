@@ -1,4 +1,5 @@
 import uvicorn
+import time
 from typing import Union
 from dotenv import load_dotenv
 load_dotenv()
@@ -54,36 +55,28 @@ def read_root():
 def read_item(item_id: int, q: Union[str, None] = None):
     return {"item_id": item_id, "q": q}
 
+# id: userID, name: filename, 
 @app.post("/")
 async def upload_file(file: UploadFile = File(...), id: str = Body(...), name: str = Body(...)):
     
+    bpy.context.preferences.filepaths.use_relative_paths = False
     bpy.ops.object.select_all(action='SELECT')
     bpy.ops.object.delete()
 
-    temp_dir = tempfile.mkdtemp()
-    
     # Save the uploaded file to the temporary directory
+    temp_dir = tempfile.mkdtemp()
     file_path = f"{temp_dir}/{file.filename}"
     with open(file_path, 'wb') as buffer:
         shutil.copyfileobj(file.file, buffer)
     
-    bpy.context.preferences.filepaths.use_relative_paths = False
-
-    
+    start_time = time.time()
+    # Import vrm file to blender scene
     result = bpy.ops.import_scene.vrm(filepath=file_path)
     if result != {"FINISHED"}:
         raise Exception(f"Failed to import vrm: {result}")
-    
-    totalLength = 0
-    for o in bpy.context.scene.objects:
-        if o.type == 'MESH':
-            mesh = o.data
-            shape_keys = mesh.shape_keys
-            if shape_keys is not None:
-                for key_block in enumerate(shape_keys.key_blocks):
-                    totalLength += 1
-    
-    print(totalLength)
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print(f"Elapsed time: {elapsed_time:.2f} seconds")
 
     for i, o in enumerate(bpy.context.scene.objects):
         if o.type == 'MESH':
@@ -127,6 +120,7 @@ def save_as_glb(filepath, id, name):
 def upload_avatar(user_id, filename, file):
     filepath = f"{user_id}/{filename}"
     supabase.storage.from_("optimize").upload(filepath, file, file_options={"x-upsert": "true"})
+    supabase.table("avatars").update({"optimized": True}).eq().execute()
     file_path_delete = filename
     try:
         os.remove(file_path_delete)
